@@ -1,10 +1,10 @@
-package com.rideapps.uber;
+package com.rideapps.matching;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class UberApplicationTests {
+class MatchingApplicationTests {
 
 	@Test
 	void contextLoads() {

@@ -1,12 +1,13 @@
-package com.rideapps.uber;
+package com.rideapps.matching;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class RideHailingApplication {
+public class MatchingApplication {
+
 	public static void main(String[] args) {
-		SpringApplication.run(RideHailingApplication.class, args);
+		SpringApplication.run(MatchingApplication.class, args);
 	}
 
 }
