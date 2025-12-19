@@ -1,6 +1,10 @@
-package com.rideapps.uber.model;
+package com.rideapps.rider.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.rideapps.common.model.entity.Location;
+import com.rideapps.common.model.enums.PaymentMethod;
+import com.rideapps.common.model.enums.RideStatus;
+import com.rideapps.common.model.enums.RideTier;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class Ride {
     private String rideId;
     private String riderId;
     private Location pickup;
@@ -18,7 +22,7 @@ public class User {
     private RideTier tier;
     private PaymentMethod paymentMethod;
     private RideStatus status;
-    private String driverId;
+    private Long driverId;
     private double estimatedFare;
     private double surgeMultiplier;
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
