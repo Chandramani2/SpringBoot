@@ -163,6 +163,99 @@ To ensure your hybrid setup works correctly, follow this standard workflow:
 
 ---
 
+# Spring Boot Annotations Guide
+
+Annotations are metadata tags that provide instructions to the Spring Framework. They eliminate the need for boilerplate code and XML configuration.
+
+---
+
+## 1. Core Framework Annotations
+
+These manage the **Inversion of Control (IoC)** container and **Dependency Injection (DI)**.
+
+* **`@SpringBootApplication`**: The entry point. It triggers auto-configuration, component scanning, and allows you to define extra configuration beans.
+* **`@Autowired`**: Tells Spring to inject a dependency automatically.
+  * *Best Practice:* Use **Constructor Injection** instead of field injection for better testability.
+* **`@Bean`**: Used within `@Configuration` classes to manually register an object as a Bean in the Spring Context.
+
+
+
+---
+
+## 2. Stereotype Annotations (Component Management)
+
+These tell Spring, "Create an instance of this class and manage it for me."
+
+| Annotation | Layer | Purpose |
+| :--- | :--- | :--- |
+| **`@Component`** | General | The parent annotation for any managed Bean. |
+| **`@Service`** | Business | Holds business logic and service-layer calculations. |
+| **`@Repository`** | Persistence | Accesses the database; provides automatic exception translation. |
+| **`@RestController`** | Presentation | Handles HTTP requests and returns data (JSON/XML). |
+
+---
+
+## 3. Data & Database Mapping
+
+Since your project uses both **PostgreSQL** and **MongoDB**, you must distinguish between JPA and NoSQL annotations.
+
+### PostgreSQL (JPA/Hibernate)
+* **`@Entity`**: Defines the class as a persistent database table.
+* **`@Table`**: Specifies the table name in PostgreSQL.
+* **`@Id`**: Marks the primary key.
+* **`@GeneratedValue`**: Defines the strategy for ID generation (e.g., `IDENTITY` or `SEQUENCE`).
+
+### MongoDB (NoSQL)
+* **`@Document`**: Maps the class to a MongoDB collection.
+* **`@Id`**: Marks the field used as the `_id` in MongoDB.
+* **`@Field`**: Optional; used to define a specific name for a key in the document.
+
+---
+
+## 4. Lombok Annotations (Boilerplate Reduction)
+
+Lombok handles the "boring" parts of Java during compilation so your code remains clean.
+
+* **`@Data`**: A "combo" annotation. It generates `@ToString`, `@EqualsAndHashCode`, `@Getter`, `@Setter`, and `@RequiredArgsConstructor`.
+* **`@NoArgsConstructor`**: Creates a constructor with no arguments (Required by JPA).
+* **`@AllArgsConstructor`**: Creates a constructor for every field in the class.
+* **`@Builder`**: Implements the Builder Pattern for object creation.
+* **`@Slf4j`**: Provides a logger instance (e.g., `log.info("Started");`).
+
+---
+
+## 5. Practical Implementation Example
+
+Here is a typical class using these annotations in harmony:
+
+```java
+@Document(collection = "products") // MongoDB mapping
+@Data                              // Lombok: Getters/Setters/ToString
+@NoArgsConstructor                 // Required for persistence
+@AllArgsConstructor                // For easy object creation
+public class Product {
+    @Id
+    private String id;
+    private String name;
+    private Double price;
+}
+```
+
+```java
+@Service                           // Spring Service Layer
+@Slf4j                             // Lombok Logging
+@RequiredArgsConstructor           // Auto-injects final fields via constructor
+public class ProductService {
+    
+    private final ProductRepository repository; // Final field injected by Lombok
+
+    public void saveProduct(Product p) {
+        log.info("Saving product: {}", p.getName());
+        repository.save(p);
+    }
+}
+```
+
 ## 8. Conclusion
 
 By combining **PostgreSQL** and **MongoDB**, you gain the best of both worlds: the strict consistency and relational integrity of SQL for user accounts and transactions, and the high-speed, flexible document storage of NoSQL for logs, catalogs, or real-time data.
