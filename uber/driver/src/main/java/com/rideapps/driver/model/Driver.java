@@ -40,8 +40,8 @@ public class Driver {
     @Embedded
     private Location driverLocation;
 
-    @NotNull(message = "Status is required") // Changed from @NotBlank to @NotNull
-    @Enumerated(EnumType.STRING)             // Ensures "AVAILABLE" is stored in DB
+    @NotNull(message = "Status is required")
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "varchar(255)")
     private Status status;
 

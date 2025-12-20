@@ -1,6 +1,8 @@
 package com.rideapps.matching.controller;
 
+import com.rideapps.common.model.dto.Request.AcceptRideRequest;
 import com.rideapps.common.model.dto.Request.CreateRideRequest;
+import com.rideapps.common.model.dto.Request.RideParam;
 import com.rideapps.common.model.enums.RideStatus;
 import com.rideapps.common.model.enums.Status;
 import com.rideapps.matching.Repository.DriverLocationRepository;
@@ -27,8 +29,6 @@ public class MatchingController {
     @Autowired
     private ClosestDriverService closestDriverService;
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     private int[][] sharedGrid; // Injects the bean from MatchingApplication
@@ -38,7 +38,7 @@ public class MatchingController {
     private static final int LON_OFFSET = 180;
 
     @PostMapping("/find-driver")
-    public Map<String, Object> matchDriverAndCalculatePath(CreateRideRequest request) {
+    public Map<String, Object> matchDriverAndCalculatePath(@RequestBody RideParam request) {
         // 1. Fetch only drivers with status AVAILABLE
         List<UpdateLocationRequest> availableDrivers = driverLocationRepository.findByStatus(Status.AVAILABLE);
 
@@ -49,16 +49,17 @@ public class MatchingController {
         // 2. Find the closest driver using Manhattan distance
         UpdateLocationRequest closestDriver = closestDriverService.findClosestDriver(availableDrivers, request);
 
+        closestDriverService.acceptRide(request, closestDriver.getDriverId());
         // 3. Extract coordinates
         // Normalize coordinates to positive grid indices
         int drvX = (int) (closestDriver.getLatitude() + LAT_OFFSET);
         int drvY = (int) (closestDriver.getLongitude() + LON_OFFSET);
 
-        int pickX = (int) (request.getPickupLatitude() + LAT_OFFSET);
-        int pickY = (int) (request.getPickupLongitude() + LON_OFFSET);
+        int pickX = (int) (request.getPickUp().getLatitude() + LAT_OFFSET);
+        int pickY = (int) (request.getPickUp().getLongitude() + LON_OFFSET);
 
-        int destX = (int) (request.getDestinationLatitude() + LAT_OFFSET);
-        int destY = (int) (request.getDestinationLongitude() + LON_OFFSET);
+        int destX = (int) (request.getDestination().getLatitude() + LAT_OFFSET);
+        int destY = (int) (request.getDestination().getLongitude() + LON_OFFSET);
 
         // 4. Calculate Leg 1: Driver to Pickup
         List<int[]> toPickup = pathfindingService.findPath(sharedGrid, drvX, drvY, pickX, pickY);
@@ -76,17 +77,5 @@ public class MatchingController {
         return result;
     }
 
-
-
-    public void assignRide(Long driverId, String rideId) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("driverId", driverId);
-        payload.put("rideId", rideId);
-        payload.put("message", "New Ride Available!");
-
-        // Push through the WebSocket broker.
-        // The Driver Service (acting as a client) will receive this instantly.
-        messagingTemplate.convertAndSend("/topic/ride-assignments", (Object) payload);
-    }
 
 }

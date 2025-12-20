@@ -1,15 +1,15 @@
 package com.rideapps.driver.service;
 
-import com.rideapps.common.model.entity.Location;
+import com.rideapps.common.model.dto.Request.AcceptRideRequest;
 import com.rideapps.driver.Repository.DriverRepository;
-import com.rideapps.driver.controller.DriverSocketController;
+import com.rideapps.driver.callback.RideAssignmentListener;
 import com.rideapps.driver.model.Driver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 
 @Service
 public class DriverService {
@@ -58,4 +58,6 @@ public class DriverService {
 
         return updatedDriver;
     }
+
+
 }

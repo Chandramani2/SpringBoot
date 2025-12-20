@@ -26,7 +26,6 @@ public class MatchingSocketController {
     }
 
 
-    // Operation 2: Immediate status change (e.g., Driver went Offline)
     @MessageMapping("/update-status")
     public void handleStatusChange(@Payload Map<String, Object> statusUpdate) {
         System.out.println("Driver status changed: " + statusUpdate.get("status"));

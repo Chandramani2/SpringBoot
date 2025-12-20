@@ -2,6 +2,7 @@ package com.rideapps.driver.service;
 
 import com.rideapps.driver.config.DriverStompSessionHandler;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.converter.ByteArrayMessageConverter;
 import org.springframework.messaging.converter.CompositeMessageConverter;
@@ -17,12 +18,15 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class DriverMatchingClientService {
+public class DriverMatchingClientService  {
 
     private StompSession stompSession;
 
     @Value("${app.matching.websocket.url}")
     private String URL;
+
+    @Autowired // Inject the managed bean
+    private DriverStompSessionHandler driverStompSessionHandler;
 
     @PostConstruct
     public void connect() {
@@ -36,7 +40,7 @@ public class DriverMatchingClientService {
         )));
 
         try {
-            this.stompSession = stompClient.connectAsync(URL, new DriverStompSessionHandler()).get();
+            this.stompSession = stompClient.connectAsync(URL, driverStompSessionHandler).get();
         } catch (Exception e) {
             e.printStackTrace();
         }

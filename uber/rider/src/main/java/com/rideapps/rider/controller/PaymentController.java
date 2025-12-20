@@ -1,9 +1,9 @@
-package com.rideapps.rider.controller.Trips;
+package com.rideapps.rider.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/trips")
-public class TripsController {
+@RequestMapping("/payments")
+public class PaymentController {
 }
