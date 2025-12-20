@@ -9,6 +9,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
 
+import java.util.Map;
+
 // In matching service
 @Controller
 public class MatchingSocketController {
@@ -17,7 +19,6 @@ public class MatchingSocketController {
     private DriverLocationEntryService driverLocationEntryService;
 
     @MessageMapping("/driver.updateLocation") // Drivers send to /app/driver.updateLocation
-    @SendTo("/topic/update-driver-location")
     public void receiveLocation(@Payload UpdateLocationRequest updateLocation) {
         // Logic to update DriverLocationStore with the new coordinates
         System.out.println("Received Location Update for Driver: " + updateLocation.getDriverId());
@@ -25,10 +26,10 @@ public class MatchingSocketController {
     }
 
 
-    @MessageMapping("/test.connection") // Destination: /app/test.connection
-    @SendTo("/topic/test-replies")       // Response sent to: /topic/test-replies
-    public String testConnection(String message) {
-        System.out.println("DEBUG: WebSocket Test Received: " + message);
-        return "Backend received: " + message;
+    // Operation 2: Immediate status change (e.g., Driver went Offline)
+    @MessageMapping("/update-status")
+    public void handleStatusChange(@Payload Map<String, Object> statusUpdate) {
+        System.out.println("Driver status changed: " + statusUpdate.get("status"));
+        // Perform specific logic for status change
     }
 }

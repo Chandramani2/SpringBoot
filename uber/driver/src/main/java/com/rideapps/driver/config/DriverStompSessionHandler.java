@@ -6,29 +6,38 @@ import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 public class DriverStompSessionHandler extends StompSessionHandlerAdapter {
-
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-        System.out.println("Connected to Matching Service. Session ID: " + session.getSessionId());
 
-        // 1. Subscribe to ride requests from the matching service
-        session.subscribe("/topic/update-driver-location", new StompFrameHandler() {
+        // Operation A: Listen for new rides
+        session.subscribe("/topic/ride-assignments", new StompFrameHandler() {
             @Override
             public Type getPayloadType(StompHeaders headers) {
-                return String.class; // Or your RideRequest DTO
+                // Tell Spring to convert the incoming message to a Map (or your specific DTO)
+                return Map.class;
             }
 
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
-                System.out.println("Received Ride Request: " + payload);
+                // Logic to alert the driver about a new ride
             }
         });
-    }
 
-    @Override
-    public void handleException(StompSession session, org.springframework.messaging.simp.stomp.StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-        exception.printStackTrace();
+        // Operation B: Listen for system-wide announcements or surge pricing alerts
+        session.subscribe("/topic/system-alerts", new StompFrameHandler() {
+
+            @Override
+            public Type getPayloadType(StompHeaders headers) {
+                return String.class;
+            }
+
+            @Override
+            public void handleFrame(StompHeaders headers, Object payload) {
+                // Logic to show a notification to the driver
+            }
+        });
     }
 }

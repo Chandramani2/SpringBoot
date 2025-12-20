@@ -35,25 +35,26 @@ public class DriverService {
         driverRepository.saveAll(driverList);
     }
 
-    public Driver updateLocation(Long driverId, Driver driverDetails){
 
+    public Driver updateLocation(Long driverId, Driver driverDetails) {
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
 
         driver.setDriverLocation(driverDetails.getDriverLocation());
+
+        // Logic: If driver reached the target coordinates (logic from your pathfinding)
+        // you can set them back to AVAILABLE here
         driver.setStatus(driverDetails.getStatus());
         Driver updatedDriver = driverRepository.save(driver);
 
-        // Convert Driver POJO to a Map or a DTO that matches UpdateLocationRequest
-        // This avoids the "Unable to convert payload" error
-        Map<String, Object> locationUpdatePayload = new HashMap<>();
-        locationUpdatePayload.put("driverId", updatedDriver.getDriverId());
-        locationUpdatePayload.put("latitude", updatedDriver.getDriverLocation().getLatitude());
-        locationUpdatePayload.put("longitude", updatedDriver.getDriverLocation().getLongitude());
-        locationUpdatePayload.put("status", updatedDriver.getStatus());
-        // Add other fields required by UpdateLocationRequest if necessary
+        // Sync with Matching Service so it knows the driver is free/at new location
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("driverId", updatedDriver.getDriverId());
+        payload.put("latitude", updatedDriver.getDriverLocation().getLatitude());
+        payload.put("longitude", updatedDriver.getDriverLocation().getLongitude());
+        payload.put("status", updatedDriver.getStatus());
 
-        driverMatchingClientService.sendLocationUpdate(locationUpdatePayload);
+        driverMatchingClientService.sendLocationUpdate(payload);
 
         return updatedDriver;
     }

@@ -8,6 +8,7 @@ import com.rideapps.matching.dto.Request.UpdateLocationRequest;
 import com.rideapps.matching.service.ClosestDriverService;
 import com.rideapps.matching.service.PathfindingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -25,6 +26,9 @@ public class MatchingController {
 
     @Autowired
     private ClosestDriverService closestDriverService;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     private int[][] sharedGrid; // Injects the bean from MatchingApplication
@@ -71,4 +75,18 @@ public class MatchingController {
 
         return result;
     }
+
+
+
+    public void assignRide(Long driverId, String rideId) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("driverId", driverId);
+        payload.put("rideId", rideId);
+        payload.put("message", "New Ride Available!");
+
+        // Push through the WebSocket broker.
+        // The Driver Service (acting as a client) will receive this instantly.
+        messagingTemplate.convertAndSend("/topic/ride-assignments", (Object) payload);
+    }
+
 }
