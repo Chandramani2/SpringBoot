@@ -7,6 +7,7 @@ import com.rideapps.common.model.entity.Location;
 import com.rideapps.common.model.enums.RideStatus;
 import com.rideapps.common.model.enums.RideTier;
 
+import com.rideapps.common.model.enums.Status;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -39,9 +40,10 @@ public class Driver {
     @Embedded
     private Location driverLocation;
 
-    @Column(nullable = false)
-    private String status = StatusProperty.DRIVER_STATUS.AVAILABLE;
-
+    @NotNull(message = "Status is required") // Changed from @NotBlank to @NotNull
+    @Enumerated(EnumType.STRING)             // Ensures "AVAILABLE" is stored in DB
+    @Column(nullable = false, columnDefinition = "varchar(255)")
+    private Status status;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

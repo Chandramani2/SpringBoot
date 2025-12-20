@@ -1,4 +1,4 @@
-package com.rideapps.common.model.config;
+package com.rideapps.matching.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

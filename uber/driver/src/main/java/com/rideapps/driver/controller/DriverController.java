@@ -37,15 +37,14 @@ public class DriverController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Driver retrieved successfully", driver));
     }
 
-
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<String>> registerUser(@RequestBody Driver driver){
+    public ResponseEntity<ApiResponse<String>> addDriver(@RequestBody Driver driver){
         driverService.registerDriver(driver);
         return ResponseEntity.ok(new ApiResponse<>(true, "Driver Registered successfully", null));
     }
 
     @PostMapping("/createList")
-    public ResponseEntity<ApiResponse<String>> registerUser(@RequestBody List<Driver> driverList){
+    public ResponseEntity<ApiResponse<String>> addDriverList(@RequestBody List<Driver> driverList){
         driverService.registerDriverList(driverList);
         return ResponseEntity.ok(new ApiResponse<>(true, "All Driver Registered successfully", null));
     }

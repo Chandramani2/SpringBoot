@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.rideapps.common.model.entity.Location;
+import com.rideapps.common.model.enums.Status;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -31,6 +32,11 @@ public class User {
     @NotBlank(message = "Phone number is required")
     @Column(nullable = false, unique = true)
     private String phoneNumber;
+
+    @NotNull(message = "Status is required") // Changed from @NotBlank to @NotNull
+    @Enumerated(EnumType.STRING)             // Ensures "AVAILABLE" is stored in DB
+    @Column(nullable = false, columnDefinition = "varchar(255)")
+    private Status status;
 
     @NotNull(message = "Location is required")
     @Column(nullable = false)

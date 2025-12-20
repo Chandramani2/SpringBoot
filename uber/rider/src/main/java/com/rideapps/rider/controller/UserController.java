@@ -38,13 +38,13 @@ public class UserController {
 
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<String>> registerUser(@RequestBody User user){
+    public ResponseEntity<ApiResponse<String>> addUser(@RequestBody User user){
         userService.registerUser(user);
         return ResponseEntity.ok(new ApiResponse<>(true, "User Registered successfully", null));
     }
 
     @PostMapping("/createList")
-    public ResponseEntity<ApiResponse<String>> registerUser(@RequestBody List<User> userList){
+    public ResponseEntity<ApiResponse<String>> addUserList(@RequestBody List<User> userList){
         userService.registerUserList(userList);
         return ResponseEntity.ok(new ApiResponse<>(true, "All User Registered successfully", null));
     }

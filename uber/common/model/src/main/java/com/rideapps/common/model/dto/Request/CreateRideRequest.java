@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 public class CreateRideRequest {
-    private String riderId;
+    private Long riderId;
     private double pickupLatitude;
     private double pickupLongitude;
     private double destinationLatitude;
