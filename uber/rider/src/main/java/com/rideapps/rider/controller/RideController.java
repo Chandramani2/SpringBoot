@@ -2,8 +2,6 @@ package com.rideapps.rider.controller;
 
 import com.rideapps.common.model.dto.ApiResponse;
 import com.rideapps.common.model.dto.Request.CreateRideRequest;
-import com.rideapps.rider.model.Ride;
-import com.rideapps.rider.model.User;
 import com.rideapps.rider.service.CreateRideService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
