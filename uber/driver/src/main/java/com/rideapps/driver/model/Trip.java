@@ -27,7 +27,7 @@ public class Trip {
     private Long tripId;
 
     @NotNull(message = "Ride Id is required")
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private Long rideId;
 
     @NotNull(message = "Driver Id is required")
@@ -76,8 +76,8 @@ public class Trip {
     @Column(nullable = false)
     private Double finalFare;
 
-    @NotNull(message = "Status is required")
+    @NotNull(message = "rideStatus is required")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private RideStatus status;
+    private RideStatus rideStatus;
 }

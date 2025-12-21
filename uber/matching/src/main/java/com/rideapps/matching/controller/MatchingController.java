@@ -1,5 +1,6 @@
 package com.rideapps.matching.controller;
 
+import com.rideapps.common.model.dto.ApiResponse;
 import com.rideapps.common.model.dto.Request.AcceptRideRequest;
 import com.rideapps.common.model.dto.Request.CreateRideRequest;
 import com.rideapps.common.model.dto.Request.RideParam;
@@ -9,8 +10,10 @@ import com.rideapps.matching.Repository.DriverLocationRepository;
 import com.rideapps.matching.dto.Request.UpdateLocationRequest;
 import com.rideapps.matching.service.ClosestDriverService;
 import com.rideapps.matching.service.PathfindingService;
+import com.rideapps.matching.service.SendMessagesToTopic;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -29,6 +32,14 @@ public class MatchingController {
     @Autowired
     private ClosestDriverService closestDriverService;
 
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
+    private SendMessagesToTopic sendMessagesToTopic;
+
+    @Value("${driver.service.url}")
+    private String driverServiceUrl;
 
     @Autowired
     private int[][] sharedGrid; // Injects the bean from MatchingApplication
@@ -49,32 +60,53 @@ public class MatchingController {
         // 2. Find the closest driver using Manhattan distance
         UpdateLocationRequest closestDriver = closestDriverService.findClosestDriver(availableDrivers, request);
 
-        closestDriverService.acceptRide(request, closestDriver.getDriverId());
-        // 3. Extract coordinates
-        // Normalize coordinates to positive grid indices
-        int drvX = (int) (closestDriver.getLatitude() + LAT_OFFSET);
-        int drvY = (int) (closestDriver.getLongitude() + LON_OFFSET);
+        //Async Topic
+//        closestDriverService.acceptRide(request, closestDriver.getDriverId());
 
-        int pickX = (int) (request.getPickUp().getLatitude() + LAT_OFFSET);
-        int pickY = (int) (request.getPickUp().getLongitude() + LON_OFFSET);
+        // b. HTTP Request to Driver Service
+        String url = driverServiceUrl + "/v1/drivers/" + closestDriver.getDriverId() + "/accept";
+        AcceptRideRequest rideRequest = new AcceptRideRequest(); // Populate fields as needed
 
-        int destX = (int) (request.getDestination().getLatitude() + LAT_OFFSET);
-        int destY = (int) (request.getDestination().getLongitude() + LON_OFFSET);
+        ApiResponse<Boolean> response = restTemplate.postForObject(url, rideRequest, ApiResponse.class);
 
-        // 4. Calculate Leg 1: Driver to Pickup
-        List<int[]> toPickup = pathfindingService.findPath(sharedGrid, drvX, drvY, pickX, pickY);
 
-        // 5. Calculate Leg 2: Pickup to Destination
-        List<int[]> toDestination = pathfindingService.findPath(sharedGrid, pickX, pickY, destX, destY);
+        if (response != null && response.getData()) {
 
-        // 6. Construct response map
-        Map<String, Object> result = new HashMap<>();
-        result.put("driverId", closestDriver.getDriverId());
-        result.put("driverStatus", closestDriver.getStatus());
-        result.put("path_to_pickup", toPickup);
-        result.put("path_to_destination", toDestination);
+            //set status to assigned as driver accepted ride
+            request.setRideStatus(RideStatus.ASSIGNED);
+            sendMessagesToTopic.sendUpdatedRideStatus(request, closestDriver.getDriverId());
 
-        return result;
+            // 3. Extract coordinates
+            // Normalize coordinates to positive grid indices
+            // a). Normalize coordinates with offsets
+            int drvX = (int) (closestDriver.getLatitude() + LAT_OFFSET);
+            int drvY = (int) (closestDriver.getLongitude() + LON_OFFSET);
+
+            int pickX = (int) (request.getPickUp().getLatitude() + LAT_OFFSET);
+            int pickY = (int) (request.getPickUp().getLongitude() + LON_OFFSET);
+
+            int destX = (int) (request.getDestination().getLatitude() + LAT_OFFSET);
+            int destY = (int) (request.getDestination().getLongitude() + LON_OFFSET);
+
+            // c).i). Using DFS to reach at Pickup
+            pathfindingService.simulateRide(sharedGrid, drvX, drvY, pickX, pickY,
+                    closestDriver.getDriverId(), request);
+            sendMessagesToTopic.reachedAtPickup(request, closestDriver.getDriverId());
+
+            // c).i). Using DFS to reach at Destination After Pickup
+            pathfindingService.simulateRide(sharedGrid, pickX, pickY, destX, destY,
+                    closestDriver.getDriverId(), request);
+            sendMessagesToTopic.reachedAtDestination(request, closestDriver.getDriverId());
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("driverId", closestDriver.getDriverId());
+            result.put("status", "RIDE_COMPLETED");
+            result.put("You Have to Pay: ", request.getEstimatedFare());
+            return result;
+        }
+        request.setRideStatus(RideStatus.CANCELLED);
+        sendMessagesToTopic.sendUpdatedRideStatus(request, closestDriver.getDriverId());
+        throw new RuntimeException("Driver failed to accept ride");
     }
 
 

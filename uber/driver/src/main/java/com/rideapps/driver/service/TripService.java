@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +23,9 @@ public class TripService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private SendMessagesToTopic sendMessagesToTopic;
+
     public Trip createTrip(RideParam request) {
         try {
             // 1. Calculate Distance and Fare
@@ -29,7 +34,7 @@ public class TripService {
                     request.getDestination().getLatitude(), request.getDestination().getLongitude()
             );
 
-            double finalFare = request.getEstimatedFare()+10;
+            double finalFare = request.getEstimatedFare();
 
             // 2. Map fields to a Dictionary (Map)
             Map<String, Object> tripData = new HashMap<>();
@@ -54,6 +59,9 @@ public class TripService {
 
             // Set calculated fare fields
             tripData.put("finalFare", finalFare);
+
+            //set End Time
+            tripData.put("endTime", LocalDateTime.now().withNano(0));
 
             // 3. Convert Map to Ride Entity using ObjectMapper
             Trip trip = objectMapper.convertValue(tripData, Trip.class);

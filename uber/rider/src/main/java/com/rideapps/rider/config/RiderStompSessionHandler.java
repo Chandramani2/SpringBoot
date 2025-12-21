@@ -1,36 +1,33 @@
-package com.rideapps.driver.config;
+package com.rideapps.rider.config;
 
 
-import com.rideapps.common.model.dto.Request.AcceptRideRequest;
-import com.rideapps.driver.callback.RideAssignmentListener;
-import com.rideapps.driver.service.DriverService;
-import org.springframework.beans.factory.annotation.Autowired;
+//import com.rideapps.driver.callback.RideAssignmentListener;
+import com.rideapps.rider.callback.DriverUpdateListener;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.Type;
 import java.util.Map;
 
 @Component
-public class DriverStompSessionHandler extends StompSessionHandlerAdapter {
+public class RiderStompSessionHandler extends StompSessionHandlerAdapter {
 
 
-    private final RideAssignmentListener rideAssignmentListener;
+    private final DriverUpdateListener driverUpdateListener;
 
     // Inject via constructor
-    public DriverStompSessionHandler(RideAssignmentListener rideAssignmentListener) {
-        this.rideAssignmentListener = rideAssignmentListener;
+    public RiderStompSessionHandler(DriverUpdateListener driverUpdateListener) {
+        this.driverUpdateListener = driverUpdateListener;
     }
 
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
 
         // Operation A: Listen for new rides
-        session.subscribe("/topic/ride-assignments", new StompFrameHandler() {
+        session.subscribe("/topic/ride-update-status", new StompFrameHandler() {
             @Override
             public Type getPayloadType(StompHeaders headers) {
                 // Tell Spring to convert the incoming message to a Map (or your specific DTO)
@@ -40,12 +37,12 @@ public class DriverStompSessionHandler extends StompSessionHandlerAdapter {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
                 // Logic to alert the driver about a new ride
-                rideAssignmentListener.getRideAssignmentTopic((Map<String, Object>) payload);
+                driverUpdateListener.updateRideStatus((Map<String, Object>) payload);
             }
         });
 
-        // Operation B: Listen for Driver Updates
-        session.subscribe("/topic/driver-matching-update", new StompFrameHandler() {
+        // Operation B: Listen for system-wide announcements or surge pricing alerts
+        session.subscribe("/topic/driver-rider-location", new StompFrameHandler() {
 
             @Override
             public Type getPayloadType(StompHeaders headers) {
@@ -55,7 +52,7 @@ public class DriverStompSessionHandler extends StompSessionHandlerAdapter {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
                 // Logic to show a notification to the driver
-                rideAssignmentListener.getDriverUpdateTopic((Map<String, Object>) payload);
+                driverUpdateListener.driverLocationUpdate((Map<String, Object>) payload);
             }
         });
 
@@ -70,7 +67,7 @@ public class DriverStompSessionHandler extends StompSessionHandlerAdapter {
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
                 // Logic to show a notification to the driver
-                rideAssignmentListener.getDriverLocation((Map<String, Object>) payload);
+                driverUpdateListener.getDriverLocation((Map<String, Object>) payload);
             }
         });
     }

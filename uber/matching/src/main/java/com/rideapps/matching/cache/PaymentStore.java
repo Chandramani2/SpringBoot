@@ -1,4 +1,4 @@
-package com.rideapps.matching.config;
+package com.rideapps.matching.cache;
 
 public class PaymentStore {
 }

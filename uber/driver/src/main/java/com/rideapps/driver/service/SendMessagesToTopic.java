@@ -5,6 +5,7 @@ import com.rideapps.driver.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 
@@ -16,19 +17,27 @@ public class SendMessagesToTopic {
     @Autowired
     private Utils utils;
 
-    public void acceptRide(RideParam rideDetails, Long driverId) {
-        Map<String, Object> payload = utils.acceptRideParam(rideDetails, driverId);
-        payload.put("acceptRide", "New Ride Available! ");
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public void sendRideStatusToRider(Map<String, Object> payload) {
+        payload.put("rideStatusChanged", true);
         // Push through the WebSocket broker.
-        // The Driver Service (acting as a client) will receive this instantly.
-        messagingTemplate.convertAndSend("/topic/rider-driver", (Object) payload);
+        // The Rider Service (acting as a client) will receive this instantly.
+        messagingTemplate.convertAndSend("/topic/ride-update-status", (Object) payload);
     }
 
-    public void createTripAndCalculateFare(RideParam rideDetails, Long driverId) {
-        Map<String, Object> payload = utils.tripRideParam(rideDetails, driverId);
-        payload.put("rideCompleted", true);
+    public void sendDriverLocationToRider(Map<String, Object> payload) {
+        payload.put("driverLocationDetails", true);
         // Push through the WebSocket broker.
-        // The Driver Service (acting as a client) will receive this instantly.
-        messagingTemplate.convertAndSend("/topic/rider-driver", (Object) payload);
+        // The Rider Service (acting as a client) will receive this instantly.
+        messagingTemplate.convertAndSend("/topic/driver-rider-location", (Object) payload);
+    }
+
+    public void driverReachedLocation(Map<String, Object> payload) {
+        payload.put("driverReachedLocation", true);
+        // Push through the WebSocket broker.
+        // The Rider Service (acting as a client) will receive this instantly.
+        messagingTemplate.convertAndSend("/topic/driver-reached-location", (Object) payload);
     }
 }

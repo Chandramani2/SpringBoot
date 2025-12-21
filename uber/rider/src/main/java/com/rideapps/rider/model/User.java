@@ -33,6 +33,10 @@ public class User {
     @Column(nullable = false, unique = true)
     private String phoneNumber;
 
+    @NotNull(message = "paymentPending is required")
+    @Column(nullable = false)
+    private Double paymentPending = 0.0;
+
     @NotNull(message = "Status is required") // Changed from @NotBlank to @NotNull
     @Enumerated(EnumType.STRING)             // Ensures "AVAILABLE" is stored in DB
     @Column(nullable = false, columnDefinition = "varchar(255)")
