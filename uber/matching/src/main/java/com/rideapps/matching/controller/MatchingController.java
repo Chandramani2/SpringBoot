@@ -89,13 +89,15 @@ public class MatchingController {
             int destY = (int) (request.getDestination().getLongitude() + LON_OFFSET);
 
             // c).i). Using DFS to reach at Pickup
+            boolean pickUp = true;
             pathfindingService.simulateRide(sharedGrid, drvX, drvY, pickX, pickY,
-                    closestDriver.getDriverId(), request);
+                    closestDriver.getDriverId(), pickUp, request);
             sendMessagesToTopic.reachedAtPickup(request, closestDriver.getDriverId());
 
             // c).i). Using DFS to reach at Destination After Pickup
+            pickUp = false;
             pathfindingService.simulateRide(sharedGrid, pickX, pickY, destX, destY,
-                    closestDriver.getDriverId(), request);
+                    closestDriver.getDriverId(), pickUp, request);
             sendMessagesToTopic.reachedAtDestination(request, closestDriver.getDriverId());
 
             Map<String, Object> result = new HashMap<>();

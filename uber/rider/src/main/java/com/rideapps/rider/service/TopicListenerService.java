@@ -48,14 +48,20 @@ public class TopicListenerService implements DriverUpdateListener {
 
     @Override
     public void getDriverLocation(Map<String, Object> payload) {
-        if(payload.containsKey("reachedDestination")) {
-            RideParam rideParam = objectMapper.convertValue(payload, RideParam.class);
+         RideParam rideParam = objectMapper.convertValue(payload, RideParam.class);
+            System.out.println("Reached Detination: " + rideParam.getRideId());
+            Ride ride = rideRepository.findById(rideParam.getRideId()).orElse(null);
+            if(ride != null) {
+                ride.setRideStatus(rideParam.getRideStatus());
+                ride.setDriverId(rideParam.getDriverId());
+                rideRepository.save(ride);
+            }
+            if(payload.containsKey("reachedDestination")) {
             User user = userRepository.findById(rideParam.getRiderId()).orElse(null);
             if(user != null) {
                 user.setPaymentPending(rideParam.getEstimatedFare());
                 userRepository.save(user);
             }
-
             System.out.println("We have reached Your Destination: " + payload.get("destination").toString());
         }
         if(payload.containsKey("reachedPickup")) {
