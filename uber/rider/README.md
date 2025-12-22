@@ -14,51 +14,71 @@ The service manages the rider's journey through several key processes:
 
 ---
 
-## Service Communication
+# Rider Service Documentation
 
-### Internal Communication (Rider to Matching Service)
-The Rider Service acts as a REST client to the Matching Service:
-* **Interaction**: When a rider requests a trip, the `RideMatchingService` calls the matching engine's REST API.
-* **Payload**: Sends pickup and destination coordinates.
-* **Response**: Receives the matched driver's details and the calculated navigation paths.
-
-### Persistent Data Handling
-The service ensures data consistency through:
-* **Ride Tracking**: Every request is assigned a unique ID and saved in the repository to maintain a history of user trips.
-* **User State**: Tracks whether a user is currently in a ride to prevent duplicate requests.
-
----
-
-## REST API Endpoints
-
-### Ride Management
-* **URL**: `/v1/rider/request-ride`
-* **Method**: `POST`
-* **Function**: Initiates the matching process and creates a ride record in the database.
-* **URL**: `/v1/rider/rides/{userId}`
-* **Method**: `GET`
-* **Function**: Retrieves all ride history for a specific passenger.
-
-### User Management
-* **URL**: `/v1/user/create`
-* **Method**: `POST`
-* **Function**: Registers a new passenger in the system.
-
-### Payment
-* **URL**: `/v1/payment/process`
-* **Method**: `POST`
-* **Function**: Records and processes payment for completed trips.
+## Overview
+The **Rider Service** is the primary interface for passengers within the ride-sharing platform. It manages user profiles, handles ride requests, coordinates with the Matching Service to find drivers, and processes payment records.
 
 ---
 
 ## Technical Stack
-* **Java 25**
-* **Spring Boot 4.0.1**
-* **Spring Data MongoDB**: Used for persisting rider profiles, ride details, and payment records.
-* **Lombok**: Utilized for reducing boilerplate code in models and DTOs.
-* **RestTemplate**: Used for synchronous communication with the Matching Service.
+* **Java**: Version 25.
+* **Framework**: Spring Boot 4.0.0.
+* **Database**: PostgreSQL (relational database used for persistence).
+* **Communication**:
+    * **REST**: Used for synchronous communication with the Matching Service.
+    * **WebSockets (STOMP)**: Facilitates real-time asynchronous communication with the Driver Service.
+* **Utilities**: Lombok for reducing boilerplate and Jackson for JSON processing.
 
-## Key Components
-* **RideMatchingService**: The bridge between the Rider Service and the Matching Service engine.
-* **RideService**: Core logic for validating and managing ride states.
-* **UserService**: Manages passenger account business rules.
+---
+
+## Core Models
+* **User**: Manages passenger profiles, including `userName`, `phoneNumber`, `paymentPending` balance, `status`, and `userLocation`.
+* **Ride**: Tracks journey details, including `riderId`, `driverId`, `pickUp` and `destination` locations, `rideStatus`, `estimatedFare`, and `surgeMultiplier`.
+* **Payment**: A data object for recording transaction details such as `amount`, `paymentMethod`, and `paymentStatus`.
+
+---
+
+## API Endpoints
+
+### Ride Management (`/v1/rides`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **POST** | `/v1/rides` | Initiates the matching process and creates a ride record. |
+| **GET** | `/v1/rides/{id}` | Retrieves the current status of a specific ride. |
+| **POST** | `/v1/rides/{id}/initiate` | Manually triggers the matching engine for a specific ride. |
+
+### User Management (`/v1/user`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/v1/user` | Retrieves a list of all registered passengers. |
+| **GET** | `/v1/user/{id}` | Fetches profile details for a specific user. |
+| **POST** | `/v1/user/create` | Registers a new passenger in the system. |
+| **POST** | `/v1/user/createList` | Allows for bulk registration of multiple users. |
+
+### Payment (`/payments`)
+* **Base URL**: `/payments` (Handled by `PaymentController` for recording and processing trip payments).
+
+---
+
+## WebSocket & Real-time Communication
+The service utilizes a WebSocket client to maintain a live connection with the **Driver Service**.
+
+### Outbound Communication
+The `RiderDriverClientService` connects to the URL defined by `app.driver.websocket.url`.
+* **Destination**: `/app/driver.updateLocation`.
+* **Function**: Sends location-based payloads to the driver infrastructure.
+
+### Inbound Topics (Subscriptions)
+The `RiderStompSessionHandler` manages subscriptions to receive real-time updates from the Driver Service:
+* **`/topic/ride-update-status`**: Listens for changes in ride status, such as when a driver accepts a request.
+* **`/topic/driver-rider-location`**: Receives live location updates for relevant participants.
+* **`/topic/driver-reached-location`**: Alerts the system when a driver arrives at a pickup or destination point.
+
+---
+
+## Configuration & Databases
+* **PostgreSQL**: Configured in `application.properties` with the datasource URL `jdbc:postgresql://localhost:5432/mydb`.
+* **JPA**: Uses Hibernate with `ddl-auto=update` for schema management.
+* **Service URLs**: Defines internal locations for the Matching Service (`http://localhost:8082`) and the Driver Service (`http://localhost:8081`).
+* **Broker Configuration**: The service enables a simple memory-based message broker on `/topic` and sets the application prefix to `/app`.

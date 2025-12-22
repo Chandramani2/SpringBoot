@@ -22,40 +22,66 @@ Unlike the Matching Service which acts as a broker, the Driver Service acts as a
 * **Connection URL**: Connects to the Matching Service at `/ws-matching`.
 * **Session Handling**: Managed by `DriverStompSessionHandler`, which handles connection established events and subscription logic.
 
-### Outbound Communication (Driver to Matching Service)
-* **Topic**: `/app/driver.updateLocation`
-    * **Function**: Sends regular updates containing the driver's ID, current coordinates, and availability status to the Matching Service.
-* **Topic**: `/app/update-status`
-    * **Function**: Notifies the matching engine of manual status changes.
-
-### Inbound Communication (Matching Service to Driver)
-* **Subscription**: `/topic/ride-assignments`
-    * **Callback**: `RideAssignmentListener`.
-    * **Function**: Listens for payloads containing new ride details. When a match is made by the Matching Service, this listener captures the assignment and triggers the local business logic to alert the driver.
-
----
-
-## REST API Endpoints
-
-### Driver Management
-* **URL**: `/v1/driver/{id}`
-* **Method**: `GET`
-* **Function**: Retrieves specific driver details and current status.
-
-### Trip Interactions
-* **URL**: `/v1/driver/trips/{driverId}`
-* **Method**: `GET`
-* **Function**: Fetches the list of trips (history and active) associated with a specific driver.
-
----
-
 ## Technical Stack
-* **Java 25**
-* **Spring Boot 4.0.1**
-* **Standard WebSocket Client**: Uses `StandardWebSocketClient` and `WebSocketStompClient` for external service communication.
-* **Spring Data MongoDB**: For persisting driver profiles and trip records.
-* **Lombok**: Used for model and DTO boilerplate.
+* **Java**: Version 25.
+* **Framework**: Spring Boot 4.0.0.
+* **Database**: PostgreSQL (for persisting driver profiles and trip history).
+* **Communication**:
+  * **REST**: For synchronous interactions like profile updates and trip lookups.
+  * **WebSockets (STOMP)**: For real-time updates, including ride assignments and location tracking.
+* **Utilities**: Lombok for boilerplate reduction and Jackson for JSON processing.
 
+---
+
+## Core Models
+* **Driver**: Represents a service provider, including fields for `driverName`, `phoneNumber`, `licensePlate`, `status` (e.g., AVAILABLE, BUSY), and current `location`.
+* **Trip**: Records details of an ongoing or completed journey, including `riderId`, `driverId`, `source` and `destination` coordinates, `fare`, and `tripStatus`.
+
+---
+
+## API Endpoints
+
+### Driver Management (`/v1/driver`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/v1/driver` | Retrieves a list of all drivers. |
+| **GET** | `/v1/driver/{id}` | Fetches details for a specific driver. |
+| **POST** | `/v1/driver/register` | Registers a new driver in the system. |
+| **POST** | `/v1/driver/status` | Updates a driver's availability status. |
+
+### Trip Management (`/v1/trips`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/v1/trips/{id}` | Retrieves specific trip details. |
+| **POST** | `/v1/trips/update-status` | Updates the progress of a trip (e.g., STARTED, COMPLETED). |
+
+### Interaction & Simulation (`/v1/interaction`)
+* **Endpoint**: `/v1/interaction/simulate-location`
+* **Function**: Used to simulate driver movement for testing and tracking purposes.
+
+---
+
+## WebSocket & Real-time Communication
+The service acts as a WebSocket server to maintain persistent connections with driver applications.
+
+### Inbound (Messages from Drivers)
+* **Destination**: `/app/driver.updateLocation`
+* **Function**: Receives real-time coordinate updates from drivers.
+* **Destination**: `/app/driver.acceptRide`
+* **Function**: Allows a driver to accept a pending ride request.
+
+### Outbound (Topics)
+The service broadcasts information to specific topics that driver clients subscribe to:
+* **`/topic/ride-assignment`**: Sends new ride requests to eligible drivers.
+* **`/topic/trip-updates`**: Provides real-time status updates regarding an active trip.
+
+---
+
+## Configuration & Databases
+* **PostgreSQL**: Configured via `application.properties` with the datasource URL `jdbc:postgresql://localhost:5432/mydb`.
+* **JPA**: Uses Hibernate with `ddl-auto=update` for automated schema management.
+* **Server Setup**: The service runs on port `8081` by default.
+* **WebSocket Config**: Defines the `/ws-driver` endpoint for STOMP connections and enables a simple message broker on `/topic`.
 ## Key Components
 * **DriverMatchingClientService**: Logic for initiating the WebSocket connection and sending updates to the Matching Service.
 * **TopicListenerService**: Manages the subscriptions to various topics once the WebSocket session is active.
