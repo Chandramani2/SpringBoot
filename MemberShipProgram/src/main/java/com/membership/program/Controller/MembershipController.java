@@ -24,6 +24,28 @@ public class MembershipController {
         return ResponseEntity.ok(membershipService.getAllTiers());
     }
 
+    // test for system-cpu-usage metrics prometheus
+//    @GetMapping("/tiers")
+//    public ResponseEntity<List<MembershipTier>> getTiers() {
+//
+//        try {
+//            boolean condition = true;
+//            while (condition) {
+//                Runnable r = () -> {
+//                    while (true) {
+//                    }
+//                };
+//                new Thread(r).start();
+//                Thread.sleep(5000);
+//            }
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        return ResponseEntity.ok(membershipService.getAllTiers());
+//    }
+
     @PostMapping("/subscribe")
     public ResponseEntity<User> subscribe(@RequestParam Long userId,
                                           @RequestParam TierName tier,
