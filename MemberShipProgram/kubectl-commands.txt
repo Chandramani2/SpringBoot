@@ -1,0 +1,21 @@
+kubectl create deployment membership-k8s --image=membershipprogram-membership-program:latest --port=8080
+kubectl get deployment
+kubectl get pods
+
+kubectl get deploy -A
+kubectl delete deploy deploymentname -n namespacename -> e.g: kubectl delete deploy membership-k8s -n default
+
+kubectl apply -f infra-k8s.yaml
+minikube image load membershipprogram-membership-program:latest
+
+// we don't have to run as this is already in yaml file
+kubectl expose deployment membership-program --type=NodePort
+
+kubectl get service
+minikube service membership-program --url // New Host:port every api will now work from this new host:port
+
+minikube dashboard
+
+kubectl get nodes
+minikube stop
+minikube delete

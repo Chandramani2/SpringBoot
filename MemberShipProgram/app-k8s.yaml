@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: membership-program
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: membership-program
+  template:
+    metadata:
+      labels:
+        app: membership-program
+    spec:
+      containers:
+        - name: membership-program
+          image: membershipprogram-membership-program:latest # docker images <- check here
+          imagePullPolicy: Never  # Tells K8s to look locally and not try to pull from a registry
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/mydb"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: membership-program
+spec:
+  type: NodePort # Use NodePort for local access
+  selector:
+    app: membership-program
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30080 # You can access the app at http://localhost:30080

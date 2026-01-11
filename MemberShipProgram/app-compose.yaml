@@ -1,0 +1,17 @@
+version: "3.7"
+
+services:
+  membership-program:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mydb
+    networks:
+      - production-network
+
+networks:
+  production-network:
+    external: true
