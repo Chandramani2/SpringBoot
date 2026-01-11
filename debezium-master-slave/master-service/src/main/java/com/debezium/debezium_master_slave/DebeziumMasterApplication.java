@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DebeziumMasterSlaveApplication {
+public class DebeziumMasterApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DebeziumMasterSlaveApplication.class, args);
+		SpringApplication.run(DebeziumMasterApplication.class, args);
 	}
 
 }
